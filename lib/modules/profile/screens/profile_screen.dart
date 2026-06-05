@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_drawer.dart';
 import '../../../providers/auth_provider.dart';
-
+import '../../../screens/login/login_screen.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -181,15 +181,18 @@ class ProfileScreen extends StatelessWidget {
 
                     child: OutlinedButton.icon(
                       onPressed: () async {
-                        await auth.logout();
+  await auth.logout();
 
-                        if (!context.mounted) return;
+  if (!context.mounted) return;
 
-                        Navigator.popUntil(
-                          context,
-                          (route) => route.isFirst,
-                        );
-                      },
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const LoginScreen(),
+    ),
+    (route) => false,
+  );
+},
 
                       icon: const Icon(
                         Icons.logout,
