@@ -1,9 +1,11 @@
+// lib/modules/asistencia/services/asistencia_service.dart
 import '../../../core/api/api_client.dart';
 
 class AsistenciaService {
-  final ApiClient _client = ApiClient();
+  final ApiClient _client =
+      ApiClient();
 
-  Future<void> registrarEntrada({
+  Future<void> registrar({
     required String docenteId,
     required String horarioId,
     required String ubicacionId,
@@ -19,6 +21,7 @@ class AsistenciaService {
         'latitud': latitud,
         'longitud': longitud,
         'tipoMarcado': 'app_hospital',
+        'notas': 'Marcado desde App',
       },
     );
   }

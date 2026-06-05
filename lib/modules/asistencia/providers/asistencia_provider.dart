@@ -4,7 +4,8 @@ import 'package:geolocator/geolocator.dart';
 import '../../../core/services/location_service.dart';
 
 class AsistenciaProvider extends ChangeNotifier {
-  final LocationService _locationService = LocationService();
+  final LocationService _locationService =
+      LocationService();
 
   bool loading = false;
 
@@ -17,17 +18,29 @@ class AsistenciaProvider extends ChangeNotifier {
   double? latitud;
   double? longitud;
 
+  String? horarioId;
+
+  String? ubicacionId;
+  String get coordenadas =>
+    latitud == null
+        ? 'Sin ubicación'
+        : '${latitud!.toStringAsFixed(6)}, '
+          '${longitud!.toStringAsFixed(6)}';
+
   Future<void> obtenerGPS() async {
     try {
       loading = true;
+
       notifyListeners();
 
-      Position pos = await _locationService.obtenerUbicacion();
+      Position pos =
+          await _locationService.obtenerUbicacion();
 
       latitud = pos.latitude;
       longitud = pos.longitude;
 
-      ubicacion = '${pos.latitude}, ${pos.longitude}';
+      ubicacion =
+          '${pos.latitude}, ${pos.longitude}';
 
       loading = false;
 
@@ -39,5 +52,31 @@ class AsistenciaProvider extends ChangeNotifier {
 
       notifyListeners();
     }
+  }
+
+  void establecerHorarioVigente({
+    required String horarioActualId,
+    required String ubicacionActualId,
+    required String descripcion,
+  }) {
+    horarioId = horarioActualId;
+
+    ubicacionId = ubicacionActualId;
+
+    horario = descripcion;
+
+    puedeMarcar = true;
+
+    notifyListeners();
+  }
+
+  void bloquearMarcacion() {
+    puedeMarcar = false;
+
+    horarioId = null;
+
+    ubicacionId = null;
+
+    notifyListeners();
   }
 }

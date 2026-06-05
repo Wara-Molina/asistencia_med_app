@@ -1,8 +1,12 @@
+// lib/modules/asistencia/screens/asistencia_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/widgets/app_drawer.dart';
 import '../../../core/services/biometric_service.dart';
 import '../providers/asistencia_provider.dart';
+import '../../horarios/providers/horario_provider.dart';
+import '../../../providers/auth_provider.dart';
+import '../services/asistencia_service.dart';
 
 class AsistenciaScreen extends StatefulWidget {
   const AsistenciaScreen({super.key});
@@ -12,17 +16,51 @@ class AsistenciaScreen extends StatefulWidget {
 }
 
 class _AsistenciaScreenState extends State<AsistenciaScreen> {
-  @override
-  void initState() {
-    super.initState();
+@override
+void initState() {
+  super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  WidgetsBinding.instance.addPostFrameCallback(
+    (_) async {
       if (!mounted) return;
 
-      context.read<AsistenciaProvider>().obtenerGPS();
-    });
-  }
+      final asistencia =
+          context.read<AsistenciaProvider>();
 
+      final horarios =
+          context.read<HorarioProvider>();
+
+      final auth =
+          context.read<AuthProvider>();
+
+      final docenteId =
+          auth.usuario?.docenteId;
+
+      if (docenteId != null) {
+        await horarios.cargarHorarios(
+          docenteId,
+        );
+      }
+
+      asistencia.obtenerGPS();
+
+      final vigente =
+          horarios.obtenerHorarioVigente();
+
+      if (vigente != null) {
+        asistencia.establecerHorarioVigente(
+          horarioActualId: vigente.id,
+          ubicacionActualId:
+              vigente.ubicacionId,
+          descripcion:
+              '${vigente.horaInicio} - ${vigente.horaFin}',
+        );
+      } else {
+        asistencia.bloquearMarcacion();
+      }
+    },
+  );
+}
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AsistenciaProvider>();
@@ -41,17 +79,27 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
             //-----------------------------------------
             Card(
               child: ListTile(
-                leading: const CircleAvatar(
-                  radius: 28,
-                  child: Icon(Icons.person),
-                ),
+leading: const CircleAvatar(
+  radius: 28,
+  backgroundColor: Colors.white,
+  child: Icon(
+    Icons.medical_services,
+  ),
+),
 
-                title: const Text(
-                  'Nombre Docente',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
+title: Text(
+  context.watch<AuthProvider>()
+      .usuario
+      ?.nombreCompleto ??
+      'Docente',
+),
 
-                subtitle: const Text('Facultad de Medicina'),
+              subtitle: Text(
+  context.watch<AuthProvider>()
+      .usuario
+      ?.rol ??
+      '',
+),
               ),
             ),
 
@@ -166,18 +214,93 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
 
               child: ElevatedButton.icon(
                 onPressed: provider.puedeMarcar
-                    ? () async {
-                        final ok = await BiometricService().autenticar();
+? () async {
 
+  if (provider.latitud == null ||
+      provider.longitud == null) {
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Esperando ubicación GPS',
+        ),
+      ),
+    );
+
+    return;
+  }
+
+  final ok =
+      await BiometricService()
+          .autenticar();
                         if (!context.mounted) return;
 
-                        if (ok) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Huella validada correctamente'),
-                            ),
-                          );
-                        } else {
+                      if (ok) {
+  try {
+    final auth =
+        context.read<AuthProvider>();
+
+    final docenteId =
+        auth.usuario?.docenteId;
+
+    if (docenteId == null) {
+      throw Exception(
+        'Docente no identificado',
+      );
+    }
+
+    if (provider.horarioId == null) {
+      throw Exception(
+        'No existe horario vigente',
+      );
+    }
+
+    if (provider.ubicacionId == null) {
+      throw Exception(
+        'No existe ubicación válida',
+      );
+    }
+
+    if (provider.latitud == null ||
+        provider.longitud == null) {
+      throw Exception(
+        'GPS no disponible',
+      );
+    }
+
+    await AsistenciaService().registrar(
+      docenteId: docenteId,
+      horarioId: provider.horarioId!,
+      ubicacionId: provider.ubicacionId!,
+      latitud: provider.latitud!,
+      longitud: provider.longitud!,
+    );
+    provider.bloquearMarcacion();
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Asistencia registrada correctamente',
+        ),
+      ),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      SnackBar(
+        content: Text(
+          e.toString(),
+        ),
+      ),
+    );
+  }
+} else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Autenticación fallida'),

@@ -1,4 +1,6 @@
+// lib/core/widgets/app_drawer.dart
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 import '../../screens/dashboard/dashboard_screen.dart';
 
@@ -20,29 +22,80 @@ class AppDrawer extends StatelessWidget {
     return Drawer(
       child: ListView(
         children: [
-          const DrawerHeader(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircleAvatar(radius: 35, child: Icon(Icons.person, size: 35)),
+         DrawerHeader(
+  decoration: const BoxDecoration(
+    color: AppColors.primary,
+  ),
 
-                SizedBox(height: 10),
+  child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
 
-                Text(
-                  'Sistema de Asistencia',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
+    children: [
+      Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: AppColors.gold,
+            width: 2,
           ),
+        ),
 
+        child: const CircleAvatar(
+          radius: 36,
+          backgroundColor: Colors.white,
+          child: Icon(
+            Icons.medical_services,
+            size: 36,
+          ),
+        ),
+      ),
+
+      const SizedBox(height: 12),
+
+      const Text(
+        'Sistema de Asistencia',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+
+      const SizedBox(height: 4),
+
+      const Text(
+        'Facultad de Medicina - UPEA',
+        style: TextStyle(
+          color: Colors.white70,
+        ),
+      ),
+
+      const SizedBox(height: 10),
+
+      Container(
+        width: 60,
+        height: 2,
+        color: AppColors.gold,
+      ),
+    ],
+  ),
+),
           //-----------------------------------------
           // DASHBOARD
           //-----------------------------------------
-          ListTile(
-            leading: const Icon(Icons.dashboard),
+ListTile(
+  leading: const Icon(
+    Icons.dashboard_outlined,
+    color: AppColors.primary,
+  ),
 
-            title: const Text('Dashboard'),
+  title: const Text(
+    'Dashboard',
+    style: TextStyle(
+      fontWeight: FontWeight.w600,
+    ),
+  ),
+
 
             onTap: () {
               Navigator.pushReplacement(
@@ -72,7 +125,7 @@ class AppDrawer extends StatelessWidget {
           // HORARIOS
           //-----------------------------------------
           ListTile(
-            leading: const Icon(Icons.schedule),
+            leading: const Icon(Icons.schedule_outlined),
 
             title: const Text('Mis Horarios'),
 
@@ -88,7 +141,7 @@ class AppDrawer extends StatelessWidget {
           // HISTORIAL
           //-----------------------------------------
           ListTile(
-            leading: const Icon(Icons.history),
+            leading: const Icon(Icons.history_edu),
 
             title: const Text('Historial'),
 
@@ -104,7 +157,7 @@ class AppDrawer extends StatelessWidget {
           // JUSTIFICACIONES
           //-----------------------------------------
           ListTile(
-            leading: const Icon(Icons.assignment),
+            leading: const Icon(Icons.assignment_turned_in),
 
             title: const Text('Justificaciones'),
 
@@ -122,7 +175,7 @@ class AppDrawer extends StatelessWidget {
           // PERFIL
           //-----------------------------------------
           ListTile(
-            leading: const Icon(Icons.person),
+            leading: const Icon(Icons.person_outline),
 
             title: const Text('Perfil'),
 
@@ -140,7 +193,10 @@ class AppDrawer extends StatelessWidget {
           // LOGOUT
           //-----------------------------------------
           ListTile(
-            leading: const Icon(Icons.logout),
+            leading: const Icon(
+  Icons.logout,
+  color: AppColors.danger,
+),
 
             title: const Text('Cerrar Sesión'),
 

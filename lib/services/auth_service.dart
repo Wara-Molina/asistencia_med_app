@@ -12,11 +12,17 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final Response response = await _client.dio.post(
+    final Response response =
+        await _client.dio.post(
       ApiConstants.login,
-      data: {'email': email, 'password': password},
+      data: {
+        'email': email,
+        'password': password,
+      },
     );
 
-    return LoginResponse.fromJson(response.data['data']);
+    return LoginResponse.fromJson(
+      response.data['data'],
+    );
   }
 }

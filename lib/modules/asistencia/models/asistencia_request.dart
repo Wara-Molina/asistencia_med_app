@@ -1,12 +1,9 @@
 class AsistenciaRequest {
   final String docenteId;
-
   final String horarioId;
-
   final String ubicacionId;
 
   final double latitud;
-
   final double longitud;
 
   AsistenciaRequest({
@@ -25,6 +22,7 @@ class AsistenciaRequest {
       'latitud': latitud,
       'longitud': longitud,
       'tipoMarcado': 'app_hospital',
+      'notas': 'Marcado desde App',
     };
   }
 }

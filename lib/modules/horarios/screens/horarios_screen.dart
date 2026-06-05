@@ -1,91 +1,211 @@
+// lib/modules/horarios/screens/horarios_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/widgets/app_drawer.dart';
 
-class HorariosScreen extends StatelessWidget {
+import '../../../providers/auth_provider.dart';
+
+import '../providers/horario_provider.dart';
+
+class HorariosScreen extends StatefulWidget {
   const HorariosScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: const AppDrawer(),
-
-      appBar: AppBar(title: const Text('Mis Horarios')),
-
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-
-        children: const [
-          _HorarioCard(
-            materia: 'Anatomía',
-            paralelo: 'A',
-            horario: '07:00 - 09:00',
-            aula: 'Laboratorio 1',
-            dia: 'Lunes',
-          ),
-
-          _HorarioCard(
-            materia: 'Farmacología',
-            paralelo: 'B',
-            horario: '10:00 - 12:00',
-            aula: 'Aula 202',
-            dia: 'Martes',
-          ),
-
-          _HorarioCard(
-            materia: 'Medicina Interna',
-            paralelo: 'C',
-            horario: '14:00 - 16:00',
-            aula: 'Hospital Clínico',
-            dia: 'Miércoles',
-          ),
-        ],
-      ),
-    );
-  }
+  State<HorariosScreen> createState() =>
+      _HorariosScreenState();
 }
 
-class _HorarioCard extends StatelessWidget {
-  final String materia;
-  final String paralelo;
-  final String horario;
-  final String aula;
-  final String dia;
+class _HorariosScreenState
+    extends State<HorariosScreen> {
 
-  const _HorarioCard({
-    required this.materia,
-    required this.paralelo,
-    required this.horario,
-    required this.aula,
-    required this.dia,
-  });
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        final auth =
+            context.read<AuthProvider>();
+
+        final docenteId =
+            auth.usuario?.docenteId;
+
+        if (docenteId != null) {
+          context
+              .read<HorarioProvider>()
+              .cargarHorarios(
+                docenteId,
+              );
+        }
+      },
+    );
+  }
+
+  String obtenerDia(int dia) {
+    switch (dia) {
+      case 0:
+        return "Lunes";
+
+      case 1:
+        return "Martes";
+
+      case 2:
+        return "Miércoles";
+
+      case 3:
+        return "Jueves";
+
+      case 4:
+        return "Viernes";
+
+      case 5:
+        return "Sábado";
+
+      default:
+        return "Domingo";
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+    final provider =
+        context.watch<HorarioProvider>();
+    return Scaffold(
+      drawer: const AppDrawer(),
 
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-
-          children: [
-            Text(
-              materia,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text('Día: $dia'),
-            Text('Paralelo: $paralelo'),
-            Text('Horario: $horario'),
-            Text('Ubicación: $aula'),
-          ],
+      appBar: AppBar(
+        title: const Text(
+          'Mis Horarios',
         ),
       ),
+
+      body: provider.loading
+          ? const Center(
+              child:
+                  CircularProgressIndicator(),
+            )
+          : ListView.builder(
+              padding:
+                  const EdgeInsets.all(16),
+
+              itemCount:
+                  provider.horarios.length,
+
+              itemBuilder: (_, index) {
+                final horario =
+                    provider.horarios[index];
+
+                return Card(
+                  margin:
+                      const EdgeInsets.only(
+                    bottom: 12,
+                  ),
+
+child: Padding(
+  padding: const EdgeInsets.all(18),
+
+  child: Column(
+    crossAxisAlignment:
+        CrossAxisAlignment.start,
+
+    children: [
+
+      Text(
+        horario.materia,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight:
+              FontWeight.bold,
+        ),
+      ),
+
+      const SizedBox(height: 4),
+
+      Text(
+        horario.codigoMateria,
+        style: TextStyle(
+          color: Colors.grey[600],
+        ),
+      ),
+
+      const Divider(height: 24),
+
+      Row(
+        children: [
+          const Icon(
+            Icons.calendar_today,
+            size: 18,
+          ),
+
+          const SizedBox(width: 8),
+
+          Text(
+            obtenerDia(
+              horario.diaSemana,
+            ),
+          ),
+        ],
+      ),
+
+      const SizedBox(height: 10),
+
+      Row(
+        children: [
+          const Icon(
+            Icons.schedule,
+            size: 18,
+          ),
+
+          const SizedBox(width: 8),
+
+          Text(
+            '${horario.horaInicio} - ${horario.horaFin}',
+          ),
+        ],
+      ),
+
+      const SizedBox(height: 10),
+
+      Row(
+        children: [
+          const Icon(
+            Icons.location_on,
+            size: 18,
+          ),
+
+          const SizedBox(width: 8),
+
+          Expanded(
+            child: Text(
+              horario.ubicacion,
+            ),
+          ),
+        ],
+      ),
+
+      const SizedBox(height: 10),
+
+      Row(
+        children: [
+          const Icon(
+            Icons.local_hospital,
+            size: 18,
+          ),
+
+          const SizedBox(width: 8),
+
+          Text(
+            horario.tipoActividad
+                .toUpperCase(),
+          ),
+        ],
+      ),
+    ],
+  ),
+),        );
+              },
+            ),
     );
   }
 }

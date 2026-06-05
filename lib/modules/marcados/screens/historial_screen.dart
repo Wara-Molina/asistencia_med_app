@@ -1,12 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/widgets/app_drawer.dart';
+import '../../../providers/auth_provider.dart';
 
-class HistorialScreen extends StatelessWidget {
+import '../providers/marcado_provider.dart';
+
+class HistorialScreen extends StatefulWidget {
   const HistorialScreen({super.key});
 
-  Color _estadoColor(String estado) {
-    switch (estado) {
+  @override
+  State<HistorialScreen> createState() => _HistorialScreenState();
+}
+
+class _HistorialScreenState extends State<HistorialScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthProvider>();
+
+      final docenteId = auth.usuario?.docenteId;
+
+      if (docenteId != null) {
+        context.read<MarcadoProvider>().cargarHistorial(docenteId);
+      }
+    });
+  }
+
+  Color estadoColor(String estado) {
+    switch (estado.toUpperCase()) {
       case 'PRESENTE':
         return Colors.green;
 
@@ -16,48 +40,117 @@ class HistorialScreen extends StatelessWidget {
       case 'ABANDONO':
         return Colors.red;
 
+      case 'AUSENTE':
+        return Colors.redAccent;
+
       default:
         return Colors.grey;
     }
   }
 
+  IconData estadoIcon(String estado) {
+    switch (estado.toUpperCase()) {
+      case 'PRESENTE':
+        return Icons.check_circle;
+
+      case 'TARDANZA':
+        return Icons.schedule;
+
+      case 'ABANDONO':
+        return Icons.logout;
+
+      case 'AUSENTE':
+        return Icons.cancel;
+
+      default:
+        return Icons.help;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final registros = [
-      {'fecha': '05/06/2025', 'estado': 'PRESENTE'},
-      {'fecha': '04/06/2025', 'estado': 'TARDANZA'},
-      {'fecha': '03/06/2025', 'estado': 'ABANDONO'},
-    ];
+    final provider = context.watch<MarcadoProvider>();
 
     return Scaffold(
       drawer: const AppDrawer(),
 
-      appBar: AppBar(title: const Text('Historial')),
+      appBar: AppBar(title: const Text('Historial de Asistencias')),
 
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
+      body: provider.loading
+          ? const Center(child: CircularProgressIndicator())
+          : provider.historial.isEmpty
+          ? const Center(child: Text('No existen registros'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
 
-        itemCount: registros.length,
+              itemCount: provider.historial.length,
 
-        itemBuilder: (_, index) {
-          final item = registros[index];
+              itemBuilder: (_, index) {
+                final item = provider.historial[index];
 
-          return Card(
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: _estadoColor(item['estado']!),
-              ),
+                final color = estadoColor(item.estado);
 
-              title: Text(
-                item['estado']!,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+                return Card(
+                  elevation: 4,
 
-              subtitle: Text(item['fecha']!),
+                  margin: const EdgeInsets.only(bottom: 14),
+
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+
+                          backgroundColor: color,
+
+                          child: Icon(
+                            estadoIcon(item.estado),
+                            color: Colors.white,
+                          ),
+                        ),
+
+                        const SizedBox(width: 16),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+
+                            children: [
+                              Text(
+                                item.estado,
+                                style: TextStyle(
+                                  color: color,
+
+                                  fontWeight: FontWeight.bold,
+
+                                  fontSize: 18,
+                                ),
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              Text(item.fecha),
+
+                              const SizedBox(height: 4),
+
+                              Text('Entrada: ${item.horaEntrada ?? "--"}'),
+
+                              Text('Salida: ${item.horaSalida ?? "--"}'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }
